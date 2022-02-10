@@ -1,78 +1,91 @@
 const createPlayer = (simbol) => {
-    return {simbol};
-}
-
-const gameBoard = (() => {
-    let _board = Array(9);
-    const getBoard = () => _board;
-    const setBoard = (index, simbol) => _board[index] = simbol;
-    const clearBoard = () => _board = Array(9);
-    return {getBoard, setBoard, clearBoard}
-})();
-
-
-const displayController = (() => {
-    const print = (index, simbol) => {
-        const squares = document.querySelectorAll('.square');
-        squares[index].innerHTML = `<h1 id="simbol">${simbol}</h1>`;
-    }
-    const score = (score) => {
-        const displayScore = document.querySelector('.score');
-        displayScore.innerText = score;
-    }
-    return {print, score}
-})();
+  return { simbol };
+};
 
 const scoreTable = (() => {
-    let _player1 = 0, _player2 = 0;
-    const getScore = () => `${_player1} - ${_player2}`;
-    const updateScore = (simbol) => {
-        simbol === 'X' ? _player1++ : _player2++;
-        displayController.score(getScore());
-    };
-    const clearScore = () => [_player1, _player2] = [0, 0];
+    let p1 = 0, p2 = 0;
+    const getScore = () => `${p1} - ${p2}`;
+    const updateScore = (simbol) => simbol === 'X' ? p1++ : p2++;
+    const clearScore = () => [p1, p2] = [0, 0];
     return {getScore, updateScore, clearScore};
 })();
 
+const gameBoard = (() => {
+  let _board = [];
+  const getBoard = () => _board;
+  const setBoard = (index, value) => (_board[index] = value);
+  const checkWin = (simbol) => {
+    const possibleWins = [
+      [0, 1, 2],
+      [3, 4, 5],
+      [6, 7, 8],
+      [0, 3, 6],
+      [1, 4, 7],
+      [2, 5, 8],
+      [0, 4, 8],
+      [2, 4, 6],
+    ];
+    for (const win of possibleWins) {
+      const [i1, i2, i3] = win;
+      if ([_board[i1], _board[i2], _board[i3]].every((el) => el === simbol)) {
+        return win;
+      }
+    }
+    return false;
+  };
+  const clearBoard = () => (_board = []);
+  return { getBoard, setBoard, checkWin, clearBoard };
+})();
+
+const displayController = (() => {
+  const printBoard = (...args) => {
+    const [square, simbol] = args;
+    if (!square.hasChildNodes()) {
+      square.innerHTML = `<h1 id="simbol">${simbol}</h1>`;
+      gameBoard.setBoard(square.getAttribute("value"), simbol);
+    }
+  };
+  const printWinner = (squares) =>
+    squares.forEach((square) => square.classList.add("winner"));
+  const clearDisplay = (squares) => {
+    squares.forEach(square => {
+        const simbol = document.querySelector('#simbol');
+        square.classList.remove('winner');
+        simbol && simbol.remove();
+        gameBoard.clearBoard();
+    })
+  }
+  const printScore = (score) => document.querySelector('.score').innerText = score;
+  return { printBoard, printWinner, printScore, clearDisplay };
+})();
+
 const gameController = (() => {
-    const player1 = createPlayer('X');
-    const player2 = createPlayer('O');
+  const player1 = createPlayer("X");
+  const player2 = createPlayer("O");
+  let simbol = player1.simbol;
 
-    let turn = 0;
+  const changeSimbol = () =>
+    simbol === player1.simbol
+      ? (simbol = player2.simbol)
+      : (simbol = player1.simbol);
 
-    const changeTurn = () => {
-        turn++;
-        return turn % 2 === 0 ? player1.simbol : player2.simbol;
-    }
-
-    const checkWinner = (board, simbol) => {
-        if([board[0], board[1], board[2]].every(el => el === simbol)) return true;
-        if([board[3], board[4], board[5]].every(el => el === simbol)) return true;
-        if([board[6], board[7], board[8]].every(el => el === simbol)) return true;
-        if([board[0], board[3], board[6]].every(el => el === simbol)) return true;
-        if([board[1], board[4], board[7]].every(el => el === simbol)) return true;
-        if([board[2], board[5], board[8]].every(el => el === simbol)) return true;
-        if([board[0], board[4], board[8]].every(el => el === simbol)) return true;
-        if([board[2], board[4], board[6]].every(el => el === simbol)) return true;
-        return false;
-    }
-
-    const squares = document.querySelectorAll('.square');
-    squares.forEach(el => el.addEventListener('click', (e) => {
-        const index = e.target.getAttribute('value');
-        const simbol = changeTurn()
-        displayController.print(index, simbol);
-        gameBoard.setBoard(index, simbol);
-        if(checkWinner(gameBoard.getBoard(), simbol)){
-            scoreTable.updateScore(simbol);
-            if(scoreTable.getScore().split(' - ').some(score => score >= 3)){
-                scoreTable.clearScore();
-                displayController.score('0 - 0');
-            }
-            const h1s = document.querySelectorAll('#simbol');
-            h1s.forEach(h1 => h1.remove());
-            gameBoard.clearBoard();
+  const squares = document.querySelectorAll(".square");
+  squares.forEach((square) =>
+    square.addEventListener("click", () => {
+      displayController.printBoard(square, simbol);
+      const win = gameBoard.checkWin(simbol);
+      if (win) {
+        const [i1, i2, i3] = win;
+        displayController.printWinner([squares[i1], squares[i2], squares[i3]]);
+        displayController.clearDisplay(squares);
+        scoreTable.updateScore(simbol);
+        displayController.printScore(scoreTable.getScore());
+        if(scoreTable.getScore().split(' - ').includes('3')){
+            scoreTable.clearScore();
+            displayController.printScore(scoreTable.getScore());
         }
-    }));
-    
+      }
+      changeSimbol();
+    })
+  );
 })();
