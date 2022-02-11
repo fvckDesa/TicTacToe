@@ -1,13 +1,16 @@
+const squares = [...document.querySelectorAll(".square")];
+
 const createPlayer = (simbol) => {
   return { simbol };
 };
 
 const scoreTable = (() => {
-    let p1 = 0, p2 = 0;
-    const getScore = () => `${p1} - ${p2}`;
-    const updateScore = (simbol) => simbol === 'X' ? p1++ : p2++;
-    const clearScore = () => [p1, p2] = [0, 0];
-    return {getScore, updateScore, clearScore};
+  let p1 = 0,
+    p2 = 0;
+  const getScore = () => `${p1} - ${p2}`;
+  const updateScore = (simbol) => (simbol === "X" ? p1++ : p2++);
+  const clearScore = () => ([p1, p2] = [0, 0]);
+  return { getScore, updateScore, clearScore };
 })();
 
 const gameBoard = (() => {
@@ -28,7 +31,7 @@ const gameBoard = (() => {
     for (const win of possibleWins) {
       const [i1, i2, i3] = win;
       if ([_board[i1], _board[i2], _board[i3]].every((el) => el === simbol)) {
-        return win;
+        return [squares[i1], squares[i2], squares[i3]];
       }
     }
     return false;
@@ -38,54 +41,76 @@ const gameBoard = (() => {
 })();
 
 const displayController = (() => {
-  const printBoard = (...args) => {
-    const [square, simbol] = args;
-    if (!square.hasChildNodes()) {
-      square.innerHTML = `<h1 id="simbol">${simbol}</h1>`;
-      gameBoard.setBoard(square.getAttribute("value"), simbol);
-    }
-  };
-  const printWinner = (squares) =>
-    squares.forEach((square) => square.classList.add("winner"));
-  const clearDisplay = (squares) => {
+  
+  const clearBoard = () => {
     squares.forEach(square => {
-        const simbol = document.querySelector('#simbol');
-        square.classList.remove('winner');
-        simbol && simbol.remove();
-        gameBoard.clearBoard();
-    })
+      square.firstChild && square.firstChild.remove();
+      square.classList.remove('winner');
+      gameBoard.clearBoard();
+    });
+  };
+  
+  const printSimbol = (square, simbol) => {
+    const turn = document.querySelector('#turn');
+    if(!square.hasChildNodes()){
+      turn.innerHTML = `${simbol === 'X' ? 'O' : 'X'} make your choice`;
+      square.innerHTML = `<h1>${simbol}</h1>`;
+      gameBoard.setBoard(squares.indexOf(square), simbol);
+    }
+    if(gameBoard.getBoard().join('').length === 9){
+      clearBoard();
+    }
   }
-  const printScore = (score) => document.querySelector('.score').innerText = score;
-  return { printBoard, printWinner, printScore, clearDisplay };
+
+  const message = (text) => {
+    const codeHTML = `<div class="message-bkg"></div><h1 class="message">${text}</h1>`;
+    const message = document.createElement('div');
+    message.classList.add('message-node', 'center');
+    message.innerHTML = codeHTML;
+    message.addEventListener('click', () => {
+      message.remove();
+      clearBoard();
+    });
+    document.body.appendChild(message);
+    if(text.match('game')){
+      scoreTable.clearScore();
+    }
+  }
+
+  const printScore = () => {
+    const score = document.querySelector('.score');
+    score.innerHTML = scoreTable.getScore();
+  }
+
+  const printWinner = (squaresWin, text) => {
+    squaresWin.forEach(square => square.classList.add('winner'));
+    message(text);
+    printScore();
+  }
+
+  const restart = () => {
+    scoreTable.clearScore();
+    clearBoard();
+    printScore();
+  }
+  return {printSimbol, printWinner, restart }
 })();
 
 const gameController = (() => {
-  const player1 = createPlayer("X");
-  const player2 = createPlayer("O");
-  let simbol = player1.simbol;
-
-  const changeSimbol = () =>
-    simbol === player1.simbol
-      ? (simbol = player2.simbol)
-      : (simbol = player1.simbol);
-
-  const squares = document.querySelectorAll(".square");
-  squares.forEach((square) =>
-    square.addEventListener("click", () => {
-      displayController.printBoard(square, simbol);
-      const win = gameBoard.checkWin(simbol);
-      if (win) {
-        const [i1, i2, i3] = win;
-        displayController.printWinner([squares[i1], squares[i2], squares[i3]]);
-        displayController.clearDisplay(squares);
-        scoreTable.updateScore(simbol);
-        displayController.printScore(scoreTable.getScore());
-        if(scoreTable.getScore().split(' - ').includes('3')){
-            scoreTable.clearScore();
-            displayController.printScore(scoreTable.getScore());
-        }
-      }
-      changeSimbol();
+  let simbol = 'X';
+  squares.forEach((square) => square.addEventListener("click", () => {
+    displayController.printSimbol(square, simbol);
+    const win = gameBoard.checkWin(simbol);
+    if(win) {
+      scoreTable.updateScore(simbol);
+      const text = scoreTable.getScore().split(' - ').some(el => el === '3') ? 'game' : 'round';
+      displayController.printWinner(win, `${simbol} win ${text}`);
+    }
+    simbol = simbol === 'X' ? 'O' : 'X';
+    document.querySelector('button').addEventListener('click', () => {
+      simbol = 'X';
+      displayController.restart();
     })
-  );
+  }));
 })();
+

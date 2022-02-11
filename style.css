@@ -46,7 +46,39 @@ body {
   font-size: 3rem;
 }
 
+.restart {
+  position: absolute;
+  top: 15vh;
+  left: 15vw;
+  padding: 0.5rem;
+}
+
 .winner {
   background-color: lightgreen;
   opacity: 0.8;
+}
+
+.message-node {
+  position: absolute;
+}
+
+.message-bkg {
+  width: 100vw;
+  height: 100vh;
+  background-color: grey;
+  opacity: 0.6;
+  animation: opacity 1s ease-in;
+}
+
+.message {
+  position: absolute;
+}
+
+@keyframes opacity {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0.6;
+  }
 }
