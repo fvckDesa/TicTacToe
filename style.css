@@ -12,16 +12,29 @@
 
 body {
   display: flex;
-  flex-direction: column;
-  justify-content: space-around;
   align-items: center;
+  gap: 2rem;
   min-height: 100vh;
+  padding: 2rem;
+}
+
+aside {
+  position: relative;
+  width: 25vw;
+  height: 80vh;
+  border: solid 1px black;
 }
 
 .center {
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.game {
+  flex-direction: column;
+  gap: 2rem;
+  height: 80vh;
 }
 
 .board {
@@ -47,9 +60,7 @@ body {
 }
 
 .restart {
-  position: absolute;
-  top: 15vh;
-  left: 15vw;
+  
   padding: 0.5rem;
 }
 
