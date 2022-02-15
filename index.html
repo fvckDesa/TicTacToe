@@ -5,28 +5,73 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="style.css" />
-    <script src="javascript\players.js" defer></script>
     <script src="index.js" defer></script>
     <title>Tic Tac Toe</title>
   </head>
   <body>
-    <aside class="center">
+    <aside class="column-around">
+      <div class="player column-around" id="player1">
+        <h3>Player1</h3>
+        <div class="radio-player center">
+          <input type="radio" name="player1" id="human" value="human" checked />
+          <label for="">human</label>
+          <input type="radio" name="player1" id="computer" value="computer" />
+          <label for="">computer</label>
+        </div>
+
+        <select name="" class="hidden" id="AIdifficulty">
+          <option value="easy">easy</option>
+          <option value="medium">medium</option>
+          <option value="hard">hard</option>
+        </select>
+
+        <div class="simbol center" id="simbol1">
+          <div class="simbol-btn current-simbol center" value="X">X</div>
+          <div class="simbol-btn center" value="O">O</div>
+        </div>
+      </div>
+      <div class="player column-around" id="player2">
+        <h3>Player2</h3>
+        <div class="radio-player center">
+          <input type="radio" name="player2" id="human" value="human" />
+          <label for="">human</label>
+          <input
+            type="radio"
+            name="player2"
+            id="computer"
+            value="computer"
+            checked
+          />
+          <label for="">computer</label>
+        </div>
+
+        <select name="" class="" id="AIdifficulty">
+          <option value="easy">easy</option>
+          <option value="medium">medium</option>
+          <option value="hard">hard</option>
+        </select>
+
+        <div class="simbol center" id="simbol2">
+          <div class="simbol-btn center" value="X">X</div>
+          <div class="simbol-btn current-simbol center" value="O">O</div>
+        </div>
+      </div>
       <button class="restart">restart</button>
     </aside>
     <div class="game center">
-        <h1 class="score">0 - 0</h1>
-        <h1 id="turn">X make your choice</h1>
-        <div class="board">
-          <div class="square center"></div>
-          <div class="square center"></div>
-          <div class="square center"></div>
-          <div class="square center"></div>
-          <div class="square center"></div>
-          <div class="square center"></div>
-          <div class="square center"></div>
-          <div class="square center"></div>
-          <div class="square center"></div>
-        </div>
+      <h1 class="score">0 - 0</h1>
+      <h1 id="turn">X make your choice</h1>
+      <div class="board">
+        <div class="square center"></div>
+        <div class="square center"></div>
+        <div class="square center"></div>
+        <div class="square center"></div>
+        <div class="square center"></div>
+        <div class="square center"></div>
+        <div class="square center"></div>
+        <div class="square center"></div>
+        <div class="square center"></div>
+      </div>
     </div>
   </body>
 </html>

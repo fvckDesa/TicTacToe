@@ -12,6 +12,7 @@ const createPlayer = (simbol = "O") => {
 const createAI = (simbol = "X", difficulty = "easy") => {
   let AIdifficulty = difficulty;
   let AIsimbol = simbol;
+  let otherSimbol = AIsimbol === "X" ? "O" : "X";
 
   const minimax = (
     newBoard,
@@ -22,9 +23,9 @@ const createAI = (simbol = "X", difficulty = "easy") => {
     depth = 0
   ) => {
     const availSpots = newBoard.getAvilableMoves();
-    if (newBoard.checkWin()?.simbol === "O") {
-      return { score: -100 + depth }; //human
-    } else if (newBoard.checkWin()?.simbol === "X") {
+    if (newBoard.checkWin()?.simbol === otherSimbol) {
+      return { score: -100 + depth };
+    } else if (newBoard.checkWin()?.simbol === AIsimbol) {
       return { score: 100 - depth };
     } else if (availSpots.length === 0) {
       return { score: 0 };
@@ -41,11 +42,25 @@ const createAI = (simbol = "X", difficulty = "easy") => {
       newBoard.setBoard(spot, player);
 
       if (maximizingPlayer) {
-        const result = minimax(newBoard, "O", alpha, beta, false, depth + 1);
+        const result = minimax(
+          newBoard,
+          otherSimbol,
+          alpha,
+          beta,
+          false,
+          depth + 1
+        );
         move.score = result.score;
         alpha = Math.max(alpha, result.score);
       } else {
-        const result = minimax(newBoard, "X", alpha, beta, true, depth + 1);
+        const result = minimax(
+          newBoard,
+          AIsimbol,
+          alpha,
+          beta,
+          true,
+          depth + 1
+        );
         move.score = result.score;
         beta = Math.min(beta, result.score);
       }
@@ -78,18 +93,11 @@ const createAI = (simbol = "X", difficulty = "easy") => {
     return moves[bestMove];
   };
 
-  const setDifficulty = (newDifficulty) => (difficulty = newDifficulty);
-
   const play = (board) => {
     switch (AIdifficulty) {
       case "easy":
-        let randomIndex = Math.floor(Math.random() * 10);
-        while (!board.getAvilableMoves().includes(randomIndex)) {
-          randomIndex = Math.floor(Math.random() * 10);
-        }
-        return randomIndex;
-      case "medium":
-        if (Math.floor(Math.random() * 101) >= 50) {
+        if (Math.floor(Math.random() * 101) <= 20) {
+          console.log('minimax')
           return minimax(board, AIsimbol, -Infinity, +Infinity, true).index;
         } else {
           let randomIndex = Math.floor(Math.random() * 10);
@@ -98,16 +106,34 @@ const createAI = (simbol = "X", difficulty = "easy") => {
           }
           return randomIndex;
         }
+        break;
+      case "medium":
+        if (Math.floor(Math.random() * 101) >= 50) {
+          console.log('minimax')
+          return minimax(board, AIsimbol, -Infinity, +Infinity, true).index;
+        } else {
+          let randomIndex = Math.floor(Math.random() * 10);
+          while (!board.getAvilableMoves().includes(randomIndex)) {
+            randomIndex = Math.floor(Math.random() * 10);
+          }
+          return randomIndex;
+        }
+        break;
       case "hard":
         return minimax(board, AIsimbol, -Infinity, +Infinity, true).index;
+        break;
     }
   };
 
-  const changeSimbol = (newSimbol) => (AIsimbol = newSimbol);
-  const getSimbol = () => AIsimbol;
-  const changeDifficulty = (newDifficulty) => (AIdifficulty = newDifficulty);
+  const changeSimbol = (newSimbol) => {
+    AIsimbol = newSimbol;
+    otherSimbol = newSimbol === "X" ? "O" : "X";
+  };
 
-  return { setDifficulty, play, changeSimbol, getSimbol, changeDifficulty };
+  const getSimbol = () => AIsimbol;
+  const setDifficulty = (newDifficulty) => (AIdifficulty = newDifficulty);
+
+  return { setDifficulty, play, changeSimbol, getSimbol };
 };
 
 const scoreTable = (() => {
@@ -206,20 +232,74 @@ const displayController = (() => {
 })();
 
 const gameController = (() => {
-  const player = createPlayer("O");
-  const ai = createAI("X", "medium");
+  const player1 = createPlayer("X");
+  const player2 = createAI("O");
 
-  const index = ai.play(mainBoard);
-  displayController.printSimbol(squares[index], ai.getSimbol());
   squares.forEach((square) =>
     square.addEventListener("click", () => {
-      displayController.printSimbol(square, player.getSimbol());
+      displayController.printSimbol(square, player1.getSimbol());
       if (mainBoard.checkWin()) {
         console.log("win");
       } else {
-        const index = ai.play(mainBoard);
-        displayController.printSimbol(squares[index], ai.getSimbol());
+        const index = player2.play(mainBoard);
+        console.log(index);
+        displayController.printSimbol(squares[index], player2.getSimbol());
       }
     })
   );
+
+  const simbolBtn = document.querySelectorAll(".simbol-btn");
+  simbolBtn.forEach((btn) =>
+    btn.addEventListener("click", () => {
+      displayController.restart();
+      simbolBtn.forEach((simbol, index) => {
+        simbol.classList.toggle("current-simbol");
+        if (simbol.classList.contains("current-simbol")) {
+          if (index < 2) {
+            player1.changeSimbol(simbol.getAttribute("value"));
+          } else {
+            player2.changeSimbol(simbol.getAttribute("value"));
+          }
+        }
+      });
+    })
+  );
+
+  const aside = document.querySelector("aside");
+  const radioP1 = aside.querySelectorAll('div#player1 input[type="radio"]');
+  const radioP2 = aside.querySelectorAll('div#player2 input[type="radio"]');
+
+  [radioP1, radioP2].forEach((radio) => {
+    radio.forEach((btn) => {
+      btn.addEventListener("input", () => {
+        const select = aside.querySelector(
+          `#player${index === 0 ? 1 : 2} #AIdifficulty`
+        );
+
+        if (
+          btn.getAttribute("value") === "computer" &&
+          select.classList.contains("hidden")
+        ) {
+          select.classList.remove("hidden");
+        } else {
+          select.classList.add("hidden");
+        }
+      });
+    });
+  });
+
+  const selectDifficulty = aside.querySelectorAll("#AIdifficulty");
+  selectDifficulty.forEach((select, index) => {
+    select.addEventListener("input", (e) => {
+      displayController.restart();
+      if (index === 0) {
+        player1?.setDifficulty(e.target.value);
+      } else {
+        player2?.setDifficulty(e.target.value);
+      }
+    })
+  });
+
+  const restart = document.querySelector(".restart");
+  restart.addEventListener("click", displayController.restart);
 })();

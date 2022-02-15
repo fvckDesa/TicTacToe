@@ -19,7 +19,6 @@ body {
 }
 
 aside {
-  position: relative;
   width: 25vw;
   height: 80vh;
   border: solid 1px black;
@@ -29,6 +28,42 @@ aside {
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.column-around {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.player {
+  height: 30%;
+}
+
+.player > h3 {
+  align-self: start;
+}
+
+.radio-player {
+  gap: 0.5rem;
+}
+
+.simbol {
+  width: 100%;
+  height: 30%;
+  gap: 0.5rem;
+}
+
+.simbol-btn {
+  width: 45%;
+  border: solid 1px black;
+  border-radius: 0.5rem;
+  transition: background 0.5s ease;
+}
+
+.current-simbol {
+  background-color: lightgreen;
 }
 
 .game {
@@ -92,4 +127,8 @@ aside {
   100% {
     opacity: 0.6;
   }
+}
+
+.hidden {
+  display: none;
 }
