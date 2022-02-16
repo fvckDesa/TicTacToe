@@ -1,15 +1,17 @@
 const squares = [...document.querySelectorAll(".square")];
 
 const createPlayer = (simbol = "O") => {
-  playerSimbol = simbol;
+  const type = "human";
+  let playerSimbol = simbol;
 
   const changeSimbol = (newSimbol) => (playerSimbol = newSimbol);
   const getSimbol = () => playerSimbol;
 
-  return { changeSimbol, getSimbol };
+  return { changeSimbol, getSimbol, type };
 };
 
 const createAI = (simbol = "X", difficulty = "easy") => {
+  const type = "computer";
   let AIdifficulty = difficulty;
   let AIsimbol = simbol;
   let otherSimbol = AIsimbol === "X" ? "O" : "X";
@@ -97,7 +99,6 @@ const createAI = (simbol = "X", difficulty = "easy") => {
     switch (AIdifficulty) {
       case "easy":
         if (Math.floor(Math.random() * 101) <= 20) {
-          console.log('minimax')
           return minimax(board, AIsimbol, -Infinity, +Infinity, true).index;
         } else {
           let randomIndex = Math.floor(Math.random() * 10);
@@ -109,7 +110,6 @@ const createAI = (simbol = "X", difficulty = "easy") => {
         break;
       case "medium":
         if (Math.floor(Math.random() * 101) >= 50) {
-          console.log('minimax')
           return minimax(board, AIsimbol, -Infinity, +Infinity, true).index;
         } else {
           let randomIndex = Math.floor(Math.random() * 10);
@@ -131,9 +131,11 @@ const createAI = (simbol = "X", difficulty = "easy") => {
   };
 
   const getSimbol = () => AIsimbol;
-  const setDifficulty = (newDifficulty) => (AIdifficulty = newDifficulty);
 
-  return { setDifficulty, play, changeSimbol, getSimbol };
+  const setDifficulty = (newDifficulty) => (AIdifficulty = newDifficulty);
+  const getDifficulty = () => AIdifficulty;
+
+  return { setDifficulty, getDifficulty, play, changeSimbol, getSimbol, type };
 };
 
 const scoreTable = (() => {
@@ -232,21 +234,53 @@ const displayController = (() => {
 })();
 
 const gameController = (() => {
-  const player1 = createPlayer("X");
-  const player2 = createAI("O");
+  let player1 = createPlayer("X");
+  let player2 = createAI("O");
 
-  squares.forEach((square) =>
-    square.addEventListener("click", () => {
-      displayController.printSimbol(square, player1.getSimbol());
-      if (mainBoard.checkWin()) {
-        console.log("win");
-      } else {
-        const index = player2.play(mainBoard);
-        console.log(index);
-        displayController.printSimbol(squares[index], player2.getSimbol());
+  const start = () => {
+    squares.forEach(square => square.clearEventListeners());
+
+    let simbol = player1.getSimbol();
+
+    function playGame(...args) {
+      const [numHuman, square] = args;
+      displayController.printSimbol(square, simbol);
+      simbol = simbol === "X" ? "O" : "X";
+      const win = mainBoard.checkWin();
+      if (win) {
+        displayController.printWinner(win.win, `The winner is ${win.simbol}`);
+      } else if (numHuman === 1) {
+        const index =
+          player1.type === "computer"
+            ? player1.play(mainBoard)
+            : player2.play(mainBoard);
+        displayController.printSimbol(squares[index], simbol);
+        simbol = simbol === "X" ? "O" : "X";
       }
-    })
-  );
+    }
+
+    if (player1.type === "human" && player2.type === "human") {
+      squares.forEach((square) =>
+        square.addEventListener("click", playGame.bind(this, 2, square))
+      );
+    } else if (player1.type === "computer" && player2.type === "computer") {
+      for (let i = 0; i < 9 && !mainBoard.checkWin(); i++) {
+        const index =
+          i % 2 === 0 ? player1.play(mainBoard) : player2.play(mainBoard);
+        mainBoard.setBoard(index, simbol);
+        playGame(0, squares[index]);
+      }
+    } else {
+      if (player1.type === "computer") {
+        const index = player1.play(mainBoard);
+        playGame(squares[index]);
+      } else {
+        squares.forEach((square) =>
+          square.addEventListener("click", playGame.bind(this, 1, square))
+        );
+      }
+    }
+  };
 
   const simbolBtn = document.querySelectorAll(".simbol-btn");
   simbolBtn.forEach((btn) =>
@@ -269,7 +303,7 @@ const gameController = (() => {
   const radioP1 = aside.querySelectorAll('div#player1 input[type="radio"]');
   const radioP2 = aside.querySelectorAll('div#player2 input[type="radio"]');
 
-  [radioP1, radioP2].forEach((radio) => {
+  [radioP1, radioP2].forEach((radio, index) => {
     radio.forEach((btn) => {
       btn.addEventListener("input", () => {
         const select = aside.querySelector(
@@ -283,7 +317,19 @@ const gameController = (() => {
           select.classList.remove("hidden");
         } else {
           select.classList.add("hidden");
+          select.value = "easy";
         }
+
+        if (btn.getAttribute("value") === "computer") {
+          index === 0
+            ? (player1 = createAI(player1.getSimbol()))
+            : (player2 = createAI(player2.getSimbol()));
+        } else {
+          index === 0
+            ? (player1 = createPlayer(player1.getSimbol()))
+            : (player2 = createPlayer(player2.getSimbol()));
+        }
+        start();
       });
     });
   });
@@ -297,9 +343,16 @@ const gameController = (() => {
       } else {
         player2?.setDifficulty(e.target.value);
       }
-    })
+    });
   });
 
   const restart = document.querySelector(".restart");
-  restart.addEventListener("click", displayController.restart);
+  restart.addEventListener("click", () => {
+    displayController.restart();
+    start();
+  });
+
+  return { start };
 })();
+
+gameController.start();

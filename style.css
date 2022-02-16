@@ -106,10 +106,11 @@ aside {
 
 .message-node {
   position: absolute;
+  left: -2rem;
 }
 
 .message-bkg {
-  width: 100vw;
+  width: calc(100vw + 2rem);
   height: 100vh;
   background-color: grey;
   opacity: 0.6;
