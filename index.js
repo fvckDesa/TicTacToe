@@ -31,7 +31,7 @@ const gameController = (() => {
   let countForHumanVsHuman = 0;
 
   let _player1 = Player("x");
-  let _player2 = AIPlayer("o", "hard");
+  let _player2 = AIPlayer("o");
 
   const symbolBtn = [...document.querySelectorAll(".symbol")];
   symbolBtn.forEach((btn) => btn.addEventListener("click", switchSymbol));
@@ -65,6 +65,11 @@ const gameController = (() => {
       (_player1.type === "human" && _player2.type === "computer") ||
       (_player1.type === "computer" && _player2.type === "human")
     ) {
+      if(_player1.type === "computer") {
+        const index = _player1.getMoves(mainBoard);
+        mainBoard.addSymbol(index, _player1.getSymbol());
+        displayController.printSymbol(squares[index], _player1.getSymbol());
+      }
       squares.forEach((square) =>
         square.addEventListener("click", humanVsComputer)
       );
@@ -79,7 +84,10 @@ const gameController = (() => {
   function humanVsHuman(e) {
     if (!e.target.classList.contains("square")) return;
     const square = e.target;
-    const symbol = countForHumanVsHuman % 2 === 0 ? _player1.getSymbol() : _player2.getSymbol();
+    const symbol =
+      countForHumanVsHuman % 2 === 0
+        ? _player1.getSymbol()
+        : _player2.getSymbol();
     mainBoard.addSymbol(squares.indexOf(square), symbol);
     displayController.printSymbol(square, symbol);
 
@@ -88,7 +96,9 @@ const gameController = (() => {
       displayController.winner(
         squares.filter((_, i) => winner.squares.includes(i))
       );
-      squares.forEach((square) => square.removeEventListener("click", humanVsHuman));
+      squares.forEach((square) =>
+        square.removeEventListener("click", humanVsHuman)
+      );
       countForHumanVsHuman = 0;
       return;
     }
@@ -98,19 +108,36 @@ const gameController = (() => {
   function humanVsComputer(e) {
     if (!e.target.classList.contains("square")) return;
     const square = e.target;
-    mainBoard.addSymbol(squares.indexOf(square), _player1.getSymbol());
-    displayController.printSymbol(square, _player1.getSymbol());
+    if (_player1.type === "human") {
+      mainBoard.addSymbol(squares.indexOf(square), _player1.getSymbol());
+      displayController.printSymbol(square, _player1.getSymbol());
 
-    const index = _player2.getMoves(mainBoard);
-    mainBoard.addSymbol(index, _player2.getSymbol());
-    displayController.printSymbol(squares[index], _player2.getSymbol());
+      if(mainBoard.getAvailableMoves().length > 0){
+        const index = _player2.getMoves(mainBoard);
+        mainBoard.addSymbol(index, _player2.getSymbol());
+        displayController.printSymbol(squares[index], _player2.getSymbol());
+      }
+    }
+
+    if(_player1.type === "computer") {
+      mainBoard.addSymbol(squares.indexOf(square), _player2.getSymbol());
+      displayController.printSymbol(square, _player2.getSymbol());
+
+      if(mainBoard.getAvailableMoves().length > 0){
+        const index = _player1.getMoves(mainBoard);
+        mainBoard.addSymbol(index, _player1.getSymbol());
+        displayController.printSymbol(squares[index], _player1.getSymbol());
+      }
+    }
 
     const winner = mainBoard.checkBoard();
     if (winner) {
       displayController.winner(
         squares.filter((_, i) => winner.squares.includes(i))
       );
-      squares.forEach((square) => square.removeEventListener("click", humanVsComputer));
+      squares.forEach((square) =>
+        square.removeEventListener("click", humanVsComputer)
+      );
     }
   }
 
@@ -131,6 +158,9 @@ const gameController = (() => {
         displayController.winner(
           squares.filter((_, i) => winner.squares.includes(i))
         );
+        clearInterval(_interval);
+      }
+      if(mainBoard.getAvailableMoves().length === 0) {
         clearInterval(_interval);
       }
       countTurn++;
